@@ -36,9 +36,9 @@ export default function DownloadSection() {
         {available ? (
           <a className="button button-green" href={release.downloadUrl}>Завантажити APK <span>↓</span></a>
         ) : (
-          <a className="button button-dark" href={release?.releasesUrl || RELEASES_URL} target="_blank" rel="noreferrer">{release?.unavailable ? "Відкрити релізи" : "Перевірити релізи"} <span>↗</span></a>
+          <a className="button button-dark" href={release?.releasesUrl || RELEASES_URL} target="_blank" rel="noreferrer">{release?.notPublished || release?.unavailable ? "Відкрити релізи" : "Перевірити релізи"} <span>↗</span></a>
         )}
-        <span>{available ? formatSize(release.size) : release?.unavailable ? "Сторінка релізів GitHub" : "Перевіряємо останню версію…"}</span>
+        <span>{available ? formatSize(release.size) : release?.notPublished ? "APK ще не опублікований" : release?.unavailable ? "Сторінка релізів GitHub" : "Перевіряємо останню версію…"}</span>
       </div>
       <div className="download-spark" aria-hidden="true">✳</div>
     </section>
