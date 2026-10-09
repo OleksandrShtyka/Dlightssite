@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f7f4" />
+  <meta name="description" content="Світло — графіки ДТЕК Київської області, ваші адреси та групи в одному місці." />
+  <title>Світло — спокійніше про світло</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/overrides.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="topbar wrap">
+    <a class="brand" href="#home" aria-label="Світло, на головну"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M18.2 2 7.7 17h7.1L13.9 30l10.4-16h-7.1L18.2 2Z" fill="currentColor"/></svg></span><span>світло<span class="brand-dot">.</span></span></a>
+    <nav class="nav"><a href="#schedule">Графік</a><a href="#why-account">Можливості</a><a href="#about">Про сервіс</a></nav>
+    <div class="top-actions"><span class="sync-state" id="sync-state"><i></i><span>Локальний режим</span></span><button class="button button-dark" id="account-button">Увійти <span aria-hidden="true">↗</span></button><button class="menu-button" id="menu-button" aria-label="Відкрити меню">☰</button></div>
+  </header>
+
+  <main class="wrap" id="home">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> КИЇВСЬКА ОБЛАСТЬ <span class="eyebrow-line"></span> ДТЕК</div>
+        <h1>Плануйте день.<br/><span>Навіть без світла.</span></h1>
+        <p class="hero-text">Ваш графік, адреси й групи — зібрані в одному спокійному місці. Працює без акаунта, синхронізується між пристроями після входу.</p>
+        <div class="hero-actions"><a href="#schedule" class="button button-green">Переглянути графік <span>↓</span></a><button class="text-button" id="hero-account">Увійти та синхронізувати <span>↗</span></button></div>
+        <div class="hero-foot"><span class="avatars"><i>К</i><i>О</i><i>С</i></span><span>Ваші налаштування залишаються під вашим контролем</span></div>
+      </div>
+      <div class="hero-art" aria-label="Ілюстрація графіка відключень">
+        <div class="sun-orbit"><span></span><i></i></div>
+        <div class="floating-label label-top"><span class="pulse"></span> ГРАФІК НА СЬОГОДНІ</div>
+        <div class="preview-card">
+          <div class="preview-head"><div><span class="small-caps">ВАША АДРЕСА</span><strong id="hero-address">Додайте адресу або групу</strong></div><button class="icon-button" id="edit-address" aria-label="Налаштувати адресу">↗</button></div>
+          <div class="preview-status"><span class="status-icon">✳</span><div><small>ЗАРАЗ ЗА ГРАФІКОМ</small><strong id="preview-status">Є світло</strong></div><span class="status-group" id="preview-group">—</span></div>
+          <div class="mini-bars" id="mini-bars"></div><div class="mini-hours"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+          <div class="preview-footer"><span><i class="legend on"></i> Є світло</span><span><i class="legend off"></i> Вимкнення</span><button id="view-full">Детальніше ↗</button></div>
+        </div>
+        <div class="floating-label label-bottom"><span class="tiny-spark">✦</span> ЗБЕРЕЖЕНО НА ЦЬОМУ ПРИСТРОЇ</div>
+        <div class="hero-asterisk">✳</div>
+      </div>
+    </section>
+
+    <section class="dashboard" id="schedule">
+      <div class="section-heading"><div><div class="eyebrow">ВАШ ПРОСТІР</div><h2>Графік на сьогодні</h2></div><div class="date-switch"><button id="prev-day" aria-label="Попередній день">←</button><span id="today-label">Сьогодні</span><button id="next-day" aria-label="Наступний день">→</button></div></div>
+      <div class="dashboard-grid">
+        <div class="schedule-card glass"><div class="card-heading"><div><span class="small-caps muted">СТАН НА ЗАРАЗ</span><h3 id="large-status">Є світло</h3></div><span class="live-pill"><i></i> За графіком</span></div><div class="address-line"><span class="pin">⌖</span><span id="address-line">Адресу ще не додано</span><button id="edit-address-2">Змінити ↗</button></div>
+          <p class="schedule-source">Графік показано з кешу застосунку або акаунта. Якщо даних ще немає, перевірте графік у ДТЕК-застосунку.</p>
+          <div class="timeline-wrap"><div class="time-now" id="time-now"><b>ЗАРАЗ</b><i></i></div><div class="timeline" id="timeline"></div><div class="hour-labels" id="hour-labels"></div></div>
+          <div class="schedule-legend"><span><i class="legend on"></i> Є світло</span><span><i class="legend off"></i> Немає світла</span><span><i class="legend maybe"></i> Можливе вимкнення</span><span><i class="legend unknown"></i> Немає даних</span><span class="legend-note">Плановий графік ДТЕК</span></div>
+          <div class="schedule-foot"><span id="updated-at">Дані графіка ще не завантажено</span><button class="refresh-button" id="refresh-button">↻ <span>Синхронізувати</span></button></div>
+        </div>
+        <aside class="side-column">
+          <div class="groups-card glass"><div class="card-heading"><div><span class="small-caps muted">ЗБЕРЕЖЕНІ ПРОФІЛІ</span><h3>Ваші групи</h3></div><button class="round-add" id="add-group" aria-label="Додати групу">+</button></div><p class="subtle">Перемикайтеся між адресами та групами в один дотик.</p><div class="group-list" id="group-list"></div><button class="add-group-link" id="add-group-link">＋ Додати групу або адресу</button></div>
+          <div class="note-card"><span class="note-icon">✦</span><div><strong>Завжди під рукою</strong><p>Додайте Світло на головний екран або встановіть Android-застосунок.</p><a href="#about">Про застосунок ↗</a></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="account-promo" id="why-account"><div class="promo-icon">⌁</div><div class="promo-copy"><div class="eyebrow">ВАШ ВИБІР</div><h2>Без акаунта — теж працює.</h2><p>Адреси, групи та графік зберігаються на цьому пристрої. Увійдіть, якщо хочете мати ті самі налаштування на сайті й у застосунку — після входу дані можна синхронізувати між пристроями.</p></div><div class="promo-action"><button class="button button-dark" id="promo-account">Створити акаунт <span>↗</span></button><span>Безкоштовно · можна продовжити без входу</span></div><div class="promo-decoration">✳</div></section>
+
+    <section class="features" id="about"><div class="feature"><span>01</span><h3>Ваші групи поруч</h3><p>Кілька адрес і груп — під рукою. Перемикайте графік без зайвих кроків.</p></div><div class="feature"><span>02</span><h3>Працює офлайн</h3><p>Останній збережений графік доступний, навіть якщо мережа зникла.</p></div><div class="feature"><span>03</span><h3>Сповіщення вчасно</h3><p>Налаштуйте нагадування перед плановим вимкненням і ввімкненням у застосунку.</p></div><div class="feature"><span>04</span><h3>Офіційне джерело</h3><p>Планові графіки стосуються ДТЕК Київських регіональних електромереж.</p></div></section>
+  </main>
+
+  <footer class="wrap footer"><a class="brand" href="#home"><span class="brand-mark"><svg viewBox="0 0 32 32"><path d="M18.2 2 7.7 17h7.1L13.9 30l10.4-16h-7.1L18.2 2Z" fill="currentColor"/></svg></span><span>світло<span class="brand-dot">.</span></span></a><span>Плануйте з ясністю.</span><span>Дані графіків можуть оновлюватися ДТЕК.</span></footer>
+
+  <dialog class="modal" id="auth-modal"><form method="dialog" class="modal-close"><button aria-label="Закрити">×</button></form><div class="modal-mark">✳</div><div class="eyebrow">ВАШІ ДАНІ — НА ВАШИХ ПРИСТРОЯХ</div><h2 id="auth-title">Увійдіть у Світло</h2><p class="modal-copy">Синхронізуйте адреси й групи на сайті та в Android-застосунку. Без акаунта застосунок продовжить працювати як раніше.</p><form id="auth-form" class="auth-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" required /></label><label>Пароль<input id="auth-password" type="password" autocomplete="current-password" minlength="8" placeholder="Щонайменше 8 символів" required /></label><button class="button button-green" id="auth-submit" type="submit">Увійти <span>↗</span></button></form><button class="auth-switch" id="auth-switch">Ще немає акаунта? Створити</button><button class="auth-switch" id="auth-logout" hidden>Вийти з акаунта</button><p class="auth-message" id="auth-message" role="status"></p><p class="auth-privacy">Вхід захищений Supabase. Паролі не зберігаються на цьому сайті.</p></dialog>
+
+  <dialog class="modal modal-small" id="profile-modal"><form method="dialog" class="modal-close"><button aria-label="Закрити">×</button></form><div class="eyebrow">НАЛАШТУВАННЯ ГРАФІКА</div><h2 id="profile-title">Додати профіль</h2><form id="profile-form" class="auth-form"><label>Населений пункт<input id="city" placeholder="Наприклад, Бровари" /></label><label>Вулиця<input id="street" placeholder="Назва вулиці" /></label><label>Будинок<input id="house" placeholder="Номер" /></label><label>Група ДТЕК<select id="group-select"></select></label><button class="button button-green" type="submit">Зберегти профіль <span>↗</span></button></form><p class="auth-privacy">Вебверсія збереже ваш вибір. Перевіряйте групу та графік на офіційному сайті ДТЕК.</p></dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
+
