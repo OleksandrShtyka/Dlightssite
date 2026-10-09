@@ -21,4 +21,3 @@ create policy "Users can update own settings" on public.account_settings
 drop policy if exists "Users can delete own settings" on public.account_settings;
 create policy "Users can delete own settings" on public.account_settings
   for delete to authenticated using ((select auth.uid()) = user_id);
-

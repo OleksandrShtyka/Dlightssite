@@ -1,9 +1,8 @@
 node_modules/
 .next/
-.next-build/
+.next-*/
 out/
 .vercel/
 .env*
 !.env.example
 npm-debug.log*
-

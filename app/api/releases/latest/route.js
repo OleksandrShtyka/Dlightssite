@@ -30,4 +30,3 @@ export async function GET() {
     return Response.json({ available: false, unavailable: true, releasesUrl: RELEASES_PAGE }, { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } });
   }
 }
-
