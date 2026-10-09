@@ -1,23 +1,38 @@
-# Світло — вебверсія
+# Світло — сайт графіків ДТЕК
 
-Адаптивний статичний сайт із локальним режимом і входом Supabase. У локальному режимі профілі зберігаються тільки в `localStorage` цього браузера. Поки графік не синхронізовано чи не завантажено, сайт показує невідомий стан, а не вигаданий графік.
+Сайт побудований на Next.js App Router і React. Адреси та групи зберігаються локально в браузері. За бажанням можна створити акаунт Supabase і синхронізувати налаштування через таблицю `account_settings`.
 
 ## Локальний запуск
 
-Відкрийте корінь репозиторію через локальний вебсервер, наприклад `npx serve .`. ES-модулі не працюють при відкритті HTML через `file://`.
+```bash
+npm install
+Copy-Item .env.example .env.local
+npm run dev
+```
+
+Заповніть `.env.local` значеннями вашого Supabase-проєкту:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
+```
+
+Це публічний клієнтський ключ Supabase. Не додавайте `service_role` або інший секретний ключ до змінних `NEXT_PUBLIC_`.
 
 ## Supabase
 
-1. Створіть Supabase-проєкт.
-2. У SQL Editor виконайте `supabase/schema.sql`.
-3. У `config.js` задайте Project URL і anon/publishable key. Це публічний ключ, доступ до рядків обмежує RLS. Ніколи не вставляйте `service_role` key у браузер.
-4. У налаштуваннях Authentication увімкніть Email/Password, налаштуйте підтвердження email та URL перенаправлення на домен сайту.
+1. Увімкніть Email/Password у налаштуваннях Authentication.
+2. Виконайте SQL з `supabase/schema.sql` у SQL Editor.
+3. Додайте URL сайту до Site URL та Redirect URLs у налаштуваннях Authentication.
+4. Встановіть обидві змінні з прикладу в локальному `.env.local` та в налаштуваннях Vercel для Production, Preview і Development.
 
-Сайт зберігає кожному користувачу один JSON-пакет у `public.account_settings`. RLS дозволяє користувачу читати й змінювати тільки рядок із власним `user_id`.
+Якщо змінних Supabase немає, сайт працює в локальному режимі без входу.
 
 ## Розгортання на Vercel
 
-Імпортуйте репозиторій у Vercel та залиште **Root Directory** порожнім, щоб використати корінь репозиторію. Це статичний сайт; build command не потрібна, output directory — `.`. Після першого деплою додайте production URL до Supabase Authentication → URL Configuration. `vercel.json` додає базові security headers.
+Імпортуйте репозиторій `OleksandrShtyka/Dlightssite` у Vercel. Платформа автоматично визначить Next.js. Коренева директорія — репозиторій, команда збірки — `npm run build`. Додайте `NEXT_PUBLIC_SUPABASE_URL` і `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` у Project Settings → Environment Variables та виконайте новий deployment.
 
+## Джерело графіка
 
+Сайт відображає локально збережені дані та дані, синхронізовані між пристроями через акаунт. Він не вигадує графік, якщо актуальних даних немає; перевіряйте планові й аварійні повідомлення в офіційних каналах ДТЕК.
 
