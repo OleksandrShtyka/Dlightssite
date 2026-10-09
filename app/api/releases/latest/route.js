@@ -11,7 +11,7 @@ export async function GET() {
     });
 
     if (response.status === 404) {
-      return Response.json({ available: false, releasesUrl: RELEASES_PAGE }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } });
+      return Response.json({ available: false, notPublished: true, releasesUrl: RELEASES_PAGE }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } });
     }
     if (!response.ok) throw new Error(`GitHub release lookup failed (${response.status})`);
 
