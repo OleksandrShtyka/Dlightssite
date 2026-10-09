@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import DownloadSection from "./DownloadSection";
 
 const STORAGE_KEY = "svitlo.web.v1";
 const initialData = () => ({
@@ -222,7 +223,7 @@ export default function HomePage() {
       <div className="ambient ambient-a" /><div className="ambient ambient-b" />
       <header className="topbar wrap">
         <a className="brand" href="#home" aria-label="Світло, на головну"><span className="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M18.2 2 7.7 17h7.1L13.9 30l10.4-16h-7.1L18.2 2Z" fill="currentColor" /></svg></span><span>світло<span className="brand-dot">.</span></span></a>
-        <nav className={`nav ${menuOpen ? "open" : ""}`}><a href="#schedule" onClick={() => setMenuOpen(false)}>Графік</a><a href="#why-account" onClick={() => setMenuOpen(false)}>Можливості</a><a href="#about" onClick={() => setMenuOpen(false)}>Про сервіс</a></nav>
+        <nav className={`nav ${menuOpen ? "open" : ""}`}><a href="#schedule" onClick={() => setMenuOpen(false)}>Графік</a><a href="#download" onClick={() => setMenuOpen(false)}>Застосунок</a><a href="#why-account" onClick={() => setMenuOpen(false)}>Можливості</a><a href="#about" onClick={() => setMenuOpen(false)}>Про сервіс</a></nav>
         <div className="top-actions"><span className={`sync-state ${user ? "online" : ""}`}><i /><span>{syncLabel}</span></span><button className="button button-dark" onClick={() => { setAuthMessage(user ? `Ви увійшли як ${user.email}. Профілі синхронізуються між пристроями.` : ""); setAuthOpen(true); }}>{user ? "Мій акаунт" : "Увійти"} <span>↗</span></button><button className="menu-button" aria-label="Відкрити меню" onClick={() => setMenuOpen(!menuOpen)}>☰</button></div>
       </header>
 
@@ -239,6 +240,7 @@ export default function HomePage() {
         </section>
 
         <section className="account-promo" id="why-account"><div className="promo-icon">⌁</div><div className="promo-copy"><div className="eyebrow">ВАШ ВИБІР</div><h2>Без акаунта — теж працює.</h2><p>Адреси, групи та графік зберігаються на цьому пристрої. Увійдіть, якщо хочете мати ті самі налаштування на сайті й у застосунку — після входу дані можна синхронізувати між пристроями.</p></div><div className="promo-action"><button className="button button-dark" onClick={() => setAuthOpen(true)}>Створити акаунт <span>↗</span></button><span>Безкоштовно · можна продовжити без входу</span></div><div className="promo-decoration">✳</div></section>
+        <DownloadSection />
         <section className="features" id="about"><div className="feature"><span>01</span><h3>Ваші групи поруч</h3><p>Кілька адрес і груп — під рукою. Перемикайте графік без зайвих кроків.</p></div><div className="feature"><span>02</span><h3>Працює офлайн</h3><p>Останній збережений графік доступний, навіть якщо мережа зникла.</p></div><div className="feature"><span>03</span><h3>Сповіщення вчасно</h3><p>Налаштуйте нагадування перед плановим вимкненням і ввімкненням у застосунку.</p></div><div className="feature"><span>04</span><h3>Офіційне джерело</h3><p>Планові графіки стосуються ДТЕК Київських регіональних електромереж.</p></div></section>
       </main>
 
