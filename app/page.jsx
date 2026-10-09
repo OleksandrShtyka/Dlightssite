@@ -138,17 +138,24 @@ export default function HomePage() {
     if (!client || !activeUser) return;
     const { data: row, error } = await client.from("account_settings").select("payload").eq("user_id", activeUser.id).maybeSingle();
     if (error) { showToast("Не вдалося завантажити дані акаунта."); return; }
+    let syncError = false;
     if (row?.payload) {
+      // decodeCloud keeps account data and merges any device-only profiles from localStorage.
       const restored = decodeCloud(row.payload);
       setData(restored);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(restored)); } catch { /* Optional cache. */ }
-      if (notify) showToast("Налаштування акаунта завантажено.");
+      const { error: mergeError } = await client.from("account_settings").upsert({ user_id: activeUser.id, payload: encodeCloud(restored), updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (mergeError) {
+        syncError = true;
+        showToast("Профілі об’єднано на пристрої, але не вдалося зберегти їх у хмарі.");
+      } else if (notify) showToast("Дані пристрою та акаунта об’єднано й синхронізовано.");
     } else {
       const local = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || initialData(); } catch { return initialData(); } })();
+      setData(local);
       const { error: saveError } = await client.from("account_settings").upsert({ user_id: activeUser.id, payload: encodeCloud(local), updated_at: new Date().toISOString() }, { onConflict: "user_id" });
-      if (saveError) showToast("Не вдалося зберегти початкові налаштування.");
+      if (saveError) { syncError = true; showToast("Не вдалося зберегти початкові налаштування."); }
     }
-    setSyncLabel("Синхронізовано");
+    setSyncLabel(syncError ? "Збережено на пристрої" : "Синхронізовано");
   }, [showToast]);
 
   useEffect(() => {
@@ -214,7 +221,7 @@ export default function HomePage() {
     const signedInUser = result.data.user;
     setUser(signedInUser); setAuthMessage("Вхід виконано. Синхронізуємо профілі…");
     await pullCloud(cloudClient, signedInUser);
-    setAuthOpen(false); setSyncLabel("Синхронізовано");
+    setAuthOpen(false);
   };
 
   const dateLabel = dayOffset === 0 ? "Сьогодні" : dayOffset === -1 ? "Вчора" : dayOffset === 1 ? "Завтра" : new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "short" }).format(new Date(Date.now() + dayOffset * 86400000));
@@ -226,7 +233,7 @@ export default function HomePage() {
       <header className="topbar wrap">
         <a className="brand" href="#home" aria-label="Світло, на головну"><span className="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M18.2 2 7.7 17h7.1L13.9 30l10.4-16h-7.1L18.2 2Z" fill="currentColor" /></svg></span><span>світло<span className="brand-dot">.</span></span></a>
         <nav className={`nav ${menuOpen ? "open" : ""}`}><a href="#schedule" onClick={() => setMenuOpen(false)}>Графік</a><a href="#download" onClick={() => setMenuOpen(false)}>Застосунок</a><a href="#why-account" onClick={() => setMenuOpen(false)}>Можливості</a><a href="#about" onClick={() => setMenuOpen(false)}>Про сервіс</a></nav>
-        <div className="top-actions"><span className={`sync-state ${user ? "online" : ""}`}><i /><span>{syncLabel}</span></span><button className="button button-dark" onClick={() => { setAuthMessage(user ? `Ви увійшли як ${user.email}. Профілі синхронізуються між пристроями.` : ""); setAuthOpen(true); }}>{user ? "Мій акаунт" : "Увійти"} <span>↗</span></button><button className="menu-button" aria-label="Відкрити меню" onClick={() => setMenuOpen(!menuOpen)}>☰</button></div>
+        <div className="top-actions"><span className={`sync-state ${user ? "online" : ""}`}><i /><span>{syncLabel}</span></span><button className="button button-dark account-button" onClick={() => { setAuthMessage(user ? `Ви увійшли як ${user.email}. Профілі синхронізуються між пристроями.` : ""); setAuthOpen(true); }} aria-label={user ? `Профіль: ${user.email}` : "Увійти в акаунт"}><span className={`account-avatar ${user ? "signed-in" : ""}`} aria-hidden="true">{user ? user.email?.slice(0, 1).toUpperCase() || "П" : <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" /><path d="M5.5 20c.4-3.4 2.8-5.2 6.5-5.2s6.1 1.8 6.5 5.2" /></svg>}</span><span className="account-label">{user ? "Мій акаунт" : "Увійти"}</span><span aria-hidden="true">↗</span></button><button className="menu-button" aria-label="Відкрити меню" onClick={() => setMenuOpen(!menuOpen)}>☰</button></div>
       </header>
 
       <main className="wrap" id="home">
