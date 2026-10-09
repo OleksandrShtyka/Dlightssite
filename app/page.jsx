@@ -8,12 +8,14 @@ const STORAGE_KEY = "svitlo.web.v1";
 const initialData = () => ({
   activeId: "local-home",
   profiles: [{ id: "local-home", name: "Мій дім", city: "", street: "", house: "", group: "", schedule: Array(24).fill("unknown") }],
+  deletedProfileIds: [],
   preferences: { outage: 30, powerOn: 10, notifications: true },
 });
 const statusLabels = { on: "Є світло", off: "Немає світла", maybe: "Можливе вимкнення", unknown: "Графік невідомий" };
 const addressOf = (profile) => [profile?.city, profile?.street, profile?.house].filter(Boolean).join(", ");
 
 function decodeCloud(payload) {
+  const deletedProfileIds = Array.isArray(payload?.deletedProfileIds) ? payload.deletedProfileIds : [];
   const profiles = (payload?.profiles || []).map((profile) => ({
     id: profile.id,
     name: profile.name || "",
@@ -24,10 +26,10 @@ function decodeCloud(payload) {
     updatedAt: profile.updatedAt || 0,
     schedule: (profile.slots || []).slice().sort((a, b) => a.hour - b.hour).map((slot) => String(slot.state || "UNKNOWN").toLowerCase()),
   }));
-  const merged = [...profiles];
+  const merged = profiles.filter((profile) => !deletedProfileIds.includes(profile.id));
   try {
     const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    (local.profiles || []).filter((profile) => addressOf(profile) || profile.group).forEach((profile) => {
+    (local.profiles || []).filter((profile) => (addressOf(profile) || profile.group) && !deletedProfileIds.includes(profile.id)).forEach((profile) => {
       const duplicate = merged.some((remote) => remote.id === profile.id || (remote.city === profile.city && remote.street === profile.street && remote.house === profile.house && remote.group === profile.group));
       if (!duplicate) merged.push(profile);
     });
@@ -35,7 +37,10 @@ function decodeCloud(payload) {
   const active = merged.find((profile) => profile.id === payload?.activeProfileId) || merged[0];
   return {
     activeId: active?.id || "local-home",
-    profiles: merged.length ? merged : initialData().profiles,
+    // An empty cloud list is meaningful: do not recreate a placeholder profile after
+    // the Android app has deleted the last saved group.
+    profiles: merged,
+    deletedProfileIds,
     updatedAt: active?.updatedAt || Date.now(),
     preferences: {
       notifications: payload?.notifications?.enabled ?? true,
@@ -48,6 +53,7 @@ function decodeCloud(payload) {
 function encodeCloud(data, cloudActiveId = data.activeId) {
   return {
     activeProfileId: cloudActiveId || data.activeId,
+    deletedProfileIds: data.deletedProfileIds || [],
     profiles: data.profiles.map((profile) => ({
       id: profile.id,
       name: profile.name || "",
