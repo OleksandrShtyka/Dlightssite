@@ -23,7 +23,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 
 1. Увімкніть Email/Password у налаштуваннях Authentication.
 2. Виконайте SQL з `supabase/schema.sql` у SQL Editor.
-3. Додайте URL сайту до Site URL та Redirect URLs у налаштуваннях Authentication.
+3. В Authentication → URL Configuration встановіть **Site URL** на production-домен сайту й додайте цей домен до **Redirect URLs** (наприклад, `https://your-domain.example/**`). Сайт передає адресу поточного домену під час реєстрації; Supabase надсилає посилання лише на дозволені Redirect URLs.
 4. Встановіть обидві змінні з прикладу в локальному `.env.local` та в налаштуваннях Vercel для Production, Preview і Development.
 
 Якщо змінних Supabase немає, сайт працює в локальному режимі без входу.
