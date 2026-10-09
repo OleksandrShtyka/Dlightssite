@@ -29,7 +29,7 @@ export default function DownloadSection() {
       <div className="download-copy">
         <div className="eyebrow">ANDROID · ОФІЦІЙНІ ОНОВЛЕННЯ</div>
         <h2 id="download-title">Застосунок завжди актуальний.</h2>
-        <p>Завантажуйте підписаний APK тут. Коли з’явиться нова версія, посилання оновиться автоматично — перевстановіть застосунок, щоб отримати оновлення.</p>
+        <p>Завантажте APK тут або перевірте оновлення в налаштуваннях Android-застосунку. Він завантажить нову версію та відкриє системне підтвердження встановлення.</p>
         {release?.version && <span className="download-version">Останній реліз: {release.version}{release.publishedAt ? ` · ${new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(release.publishedAt))}` : ""}</span>}
       </div>
       <div className="download-action">
