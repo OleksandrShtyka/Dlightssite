@@ -205,7 +205,9 @@ export default function HomePage() {
     event.preventDefault();
     if (!cloudClient) { setAuthMessage("Supabase ще не підключений. Поки налаштування зберігаються на цьому пристрої."); return; }
     setBusy(true); setAuthMessage(signup ? "Створюємо акаунт…" : "Виконуємо вхід…");
-    const result = signup ? await cloudClient.auth.signUp({ email: email.trim(), password }) : await cloudClient.auth.signInWithPassword({ email: email.trim(), password });
+    const result = signup
+      ? await cloudClient.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.origin } })
+      : await cloudClient.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (result.error) { setAuthMessage(result.error.message); return; }
     if (signup && !result.data.session) { setAuthMessage("Перевірте пошту й підтвердьте email, щоб завершити реєстрацію."); return; }
