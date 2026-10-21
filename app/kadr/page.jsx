@@ -114,13 +114,13 @@ export default function KadrPage() {
     <main className="kadr-page">
       <header className="kadr-top wrap">
         <a className="brand" href="/"><span className="kadr-brand-mark">К</span><span>Кадр<span className="brand-dot">.</span></span></a>
-        <nav><a href="/">Світло</a><a className="active" href="/kadr">Кінощоденник</a><a href="/downloads/kadr-moviediary-v1.0.2.apk">Завантажити Android ↗</a></nav>
+        <nav><a href="/">Світло</a><a className="active" href="/kadr">Кінощоденник</a><a href="/api/releases/kadr">Завантажити Android ↗</a></nav>
         {user ? <button className="button button-dark" onClick={async () => { await client.auth.signOut(); setUser(null); setMessage("Вийшли з акаунта."); }}>Вийти · {user.email?.split("@")[0]}</button> : <a href="#account" className="button button-dark">Мій акаунт ↗</a>}
       </header>
 
       <div className="kadr-wrap wrap">
         <section className="kadr-hero">
-          <div><div className="eyebrow"><span className="eyebrow-dot" /> КІНОЩОДЕННИК · ПРОЄКТ № 02</div><h1>Історії, які<br /><span>залишилися з тобою.</span></h1><p>Зберігайте переглянуті фільми, ставте оцінки й діліться своїм списком. Увійдіть тим самим акаунтом, що й у застосунку «Кадр» на Android.</p><a className="button button-green" href="/downloads/kadr-moviediary-v1.0.2.apk">Завантажити застосунок <span>↓</span></a></div>
+          <div><div className="eyebrow"><span className="eyebrow-dot" /> КІНОЩОДЕННИК · ПРОЄКТ № 02</div><h1>Історії, які<br /><span>залишилися з тобою.</span></h1><p>Зберігайте переглянуті фільми, ставте оцінки й діліться своїм списком. Увійдіть тим самим акаунтом, що й у застосунку «Кадр» на Android.</p><a className="button button-green" href="/api/releases/kadr">Завантажити застосунок <span>↓</span></a></div>
           <div className="kadr-hero-art" aria-hidden="true"><div className="film-orbit" /><div className="film-ticket"><span>ВАША КОЛЕКЦІЯ</span><strong>КАДР</strong><i>✦ ✦ ✦ ✦ ✦</i><small>ФІЛЬМИ, ЩО ВАРТІ УВАГИ</small></div><b>✳</b></div>
         </section>
 

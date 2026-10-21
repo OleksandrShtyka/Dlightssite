@@ -1,4 +1,4 @@
-const RELEASE_URL = "https://api.github.com/repos/OleksandrShtyka/Dlightssite/releases/latest";
+const RELEASE_URL = "https://api.github.com/repos/OleksandrShtyka/Dlightssite/releases?per_page=100";
 const RELEASES_PAGE = "https://github.com/OleksandrShtyka/Dlightssite/releases";
 
 export const revalidate = 300;
@@ -15,8 +15,10 @@ export async function GET() {
     }
     if (!response.ok) throw new Error(`GitHub release lookup failed (${response.status})`);
 
-    const release = await response.json();
-    const apk = (release.assets || []).find((asset) => asset.name?.toLowerCase().endsWith(".apk"));
+    const releases = await response.json();
+    const release = releases.find((item) => !item.draft && !item.prerelease && (item.assets || []).some((asset) => /^dtekkivykschedule-v.*\.apk$/i.test(asset.name || "")));
+    if (!release) return Response.json({ available: false, notPublished: true, releasesUrl: RELEASES_PAGE }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } });
+    const apk = (release.assets || []).find((asset) => /^dtekkivykschedule-v.*\.apk$/i.test(asset.name || ""));
     return Response.json({
       available: Boolean(apk),
       version: release.tag_name || release.name || "Остання версія",
