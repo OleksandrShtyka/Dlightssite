@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Світло — графіки ДТЕК Київської області",
-  description: "Ваш графік, адреси й групи ДТЕК Київської області в одному спокійному місці.",
+  title: "Світло × Кадр — щоденні технології",
+  description: "Два проєкти: графіки ДТЕК Київської області та кінощоденник Кадр.",
 };
 
 export default function RootLayout({ children }) {
