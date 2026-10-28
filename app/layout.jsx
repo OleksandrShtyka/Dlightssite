@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Світло × Кадр — щоденні технології",
-  description: "Два проєкти: графіки ДТЕК Київської області та кінощоденник Кадр.",
+  title: "Світло × Кадр — особистий простір",
+  description: "Графіки ДТЕК, кінощоденник і фітнес-трекер в одному особистому просторі.",
 };
 
 export default function RootLayout({ children }) {

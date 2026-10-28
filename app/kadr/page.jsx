@@ -114,7 +114,7 @@ export default function KadrPage() {
     <main className="kadr-page">
       <header className="kadr-top wrap">
         <a className="brand" href="/"><span className="kadr-brand-mark">К</span><span>Кадр<span className="brand-dot">.</span></span></a>
-        <nav><a href="/">Світло</a><a className="active" href="/kadr">Кінощоденник</a><a href="/api/releases/kadr">Завантажити Android ↗</a></nav>
+        <nav><a href="/">Світло</a><a className="active" href="/kadr">Кінощоденник</a><a href="/fitness">Фітнес</a><a href="/account">Кабінет</a></nav>
         {user ? <button className="button button-dark" onClick={async () => { await client.auth.signOut(); setUser(null); setMessage("Вийшли з акаунта."); }}>Вийти · {user.email?.split("@")[0]}</button> : <a href="#account" className="button button-dark">Мій акаунт ↗</a>}
       </header>
 

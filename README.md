@@ -1,6 +1,6 @@
 # Світло — сайт графіків ДТЕК
 
-Сайт побудований на Next.js App Router і React та об’єднує два окремі проєкти: «Світло» для графіків ДТЕК і «Кадр» для кінощоденника. «Світло» зберігає профілі через `account_settings`, «Кадр» — записи через окрему `movie_diaries`. В обох застосунках працює один Supabase акаунт, але дані проєктів розділені.
+Сайт побудований на Next.js App Router і об’єднує три проєкти в одному інтерфейсі: «Світло» для графіків ДТЕК, «Кадр» для кінощоденника та AutoChecker Fitness Tracker. Спільний вхід Supabase відкриває особистий кабінет `/account` і трекер `/fitness`. Дані проєктів зберігаються окремо: `account_settings`, `movie_diaries` та `fitness_tracker_data`.
 
 ## Локальний запуск
 
@@ -22,7 +22,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 ## Supabase
 
 1. Увімкніть Email/Password у налаштуваннях Authentication.
-2. Виконайте SQL з `supabase/schema.sql` у SQL Editor. Для наявного проєкту достатньо окремо запустити `supabase/migrations/20261021_movie_diaries.sql`; це створить таблицю «Кадр» з RLS-політиками, не змінюючи `account_settings`.
+2. Виконайте SQL з `supabase/schema.sql` у SQL Editor. Для наявного проєкту застосуйте міграції `supabase/migrations/20261021_movie_diaries.sql` і `supabase/migrations/20261028_fitness_tracker_data.sql`. Остання створює окрему RLS-захищену таблицю для фітнес-профілю; вона не змінює дані «Світла» чи «Кадру».
 3. В Authentication → URL Configuration встановіть **Site URL** на production-домен сайту й додайте цей домен до **Redirect URLs** (наприклад, `https://your-domain.example/**`). Сайт передає адресу поточного домену під час реєстрації; Supabase надсилає посилання лише на дозволені Redirect URLs.
 4. Встановіть обидві змінні з прикладу в локальному `.env.local` та в налаштуваннях Vercel для Production, Preview і Development.
 
@@ -37,6 +37,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 Створіть GitHub Release з новим тегом (наприклад, `v1.0.9`) і додайте підписаний release APK як asset із розширенням `.apk`. Сайт показує останню версію та посилання на файл, а Android-застосунок може перевірити й завантажити оновлення у своїх налаштуваннях. Сайт для кожного нового APK перевипускати не потрібно. Android перевіряє підпис APK, тому кожне оновлення має бути підписане тим самим ключем, що й попереднє; установлення завершується системним підтвердженням Android.
 
 APK «Кадр» доступний на сторінці `/kadr` і через стабільне посилання `/api/releases/kadr`, яке переспрямовує на останній APK «Кадру» в GitHub Releases. Для публікації створіть GitHub Release та додайте asset з іменем на зразок `kadr-moviediary-v1.0.3.apk`; застосунок перевіряє ці релізи під час запуску.
+
+Fitness Tracker доступний на `/fitness`, а особистий кабінет усіх трьох проєктів — на `/account`. Сторінка фітнесу працює з тією ж таблицею `fitness_tracker_data`, що й Android-застосунок: вебсайт показує та зберігає тренування, харчовий щоденник, вагу, добавки, цілі й профіль. Щоб посилання `/api/releases/fitness` вело прямо на APK, додайте файл на кшталт `autochecker-mobile-v3.2.7.apk` до опублікованого GitHub Release цього репозиторію. Якщо такого asset ще немає, посилання відкриє GitHub Releases.
 
 Після входу в Android-застосунок локальна колекція об’єднується з `movie_diaries` і синхронізується. Refresh token у застосунку шифрується через Android Keystore. Видалені записи синхронізуються як tombstones, щоб не з’являлися знову на іншому пристрої. Без входу щоденник залишається локальним.
 
