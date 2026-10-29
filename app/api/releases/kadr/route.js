@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const response = await fetch(RELEASES_URL, {
-      headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "Dlightssite-Web", "X-GitHub-Api-Version": "2022-11-28" },
       cache: "no-store",
     });
     if (!response.ok) throw new Error(`GitHub release lookup failed (${response.status})`);

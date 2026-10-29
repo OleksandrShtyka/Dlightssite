@@ -7,7 +7,7 @@ export const revalidate = 300;
 export async function GET() {
   try {
     const response = await fetch(RELEASE_URL, {
-      headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "Dlightssite-Web", "X-GitHub-Api-Version": "2022-11-28" },
       next: { revalidate: 300 },
     });
     if (!response.ok) throw new Error(`Release lookup failed (${response.status})`);

@@ -27,9 +27,10 @@ export default function FitnessPage() {
   const payloadRef = useRef(emptyPayload);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [sessionForm, setSessionForm] = useState({ date: localDate(), workoutType: "Силове", durationMin: 60, exercise: "", sets: 3, reps: 10, kg: 0, notes: "" });
+  const [sessionForm, setSessionForm] = useState({ date: localDate(), workoutType: "full_body", durationMin: 60, exercises: [], notes: "" });
   const [mealForm, setMealForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", meal: 0 });
-  const [suppForm, setSuppForm] = useState({ name: "", totalWeightG: "", servingSizeG: "", servingsPerDay: 1, price: "", notes: "" });
+  const [suppForm, setSuppForm] = useState({ name: "", totalWeightG: "", servingSizeG: "", servingsPerDay: 1, price: "", purchaseDate: localDate(), notes: "" });
+  const [suppEditId, setSuppEditId] = useState(null);
   const [weightForm, setWeightForm] = useState("");
   const [profileForm, setProfileForm] = useState({ monthlyGymCost: "", fitnessGoal: "general", fitnessBadge: "" });
 
@@ -85,6 +86,19 @@ export default function FitnessPage() {
   const targetCalories = num(goals.calories) || 2000;
   const latestWeight = weights.slice().sort((a, b) => num(b.date) - num(a.date))[0];
   const monthSessions = sessions.filter((session) => String(session.date || "").slice(0, 7) === todayKey.slice(0, 7)).length;
+  const monthlyGymCost = num(payload.profile?.monthlyGymCost);
+  const gymCostPerSession = monthSessions ? monthlyGymCost / monthSessions : monthlyGymCost;
+  const supplementStatuses = supplements.map((item) => {
+    const total = num(item.totalWeightG);
+    const serving = num(item.servingSizeG);
+    const perDay = Math.max(.1, num(item.servingsPerDay));
+    const purchase = new Date(`${item.purchaseDate || todayKey}T00:00:00`);
+    const elapsed = Number.isNaN(purchase.valueOf()) ? 0 : Math.max(0, Math.floor((new Date(`${todayKey}T00:00:00`) - purchase) / 86400000));
+    const remaining = Math.max(0, total - elapsed * serving * perDay);
+    const daysLeft = total && serving ? Math.floor(remaining / (serving * perDay)) : 0;
+    const depletion = new Date(`${todayKey}T00:00:00`); depletion.setDate(depletion.getDate() + daysLeft);
+    return { ...item, remaining, remainingPct: total ? Math.max(0, Math.min(100, remaining / total * 100)) : 0, daysLeft, depletionDate: sessionDate(depletion), costPerServing: total && serving ? num(item.price) * serving / total : 0 };
+  });
 
   const persist = async (next) => {
     if (!client || !user) return;
@@ -99,13 +113,17 @@ export default function FitnessPage() {
 
   const addSession = async (event) => {
     event.preventDefault();
-    if (!sessionForm.workoutType.trim()) return;
-    const exercise = sessionForm.exercise.trim() ? [{ name: sessionForm.exercise.trim(), sets: num(sessionForm.sets), reps: num(sessionForm.reps), kg: num(sessionForm.kg) }] : [];
-    const volumeKg = exercise.reduce((sum, item) => sum + item.sets * item.reps * item.kg, 0);
-    const row = { id: crypto.randomUUID(), date: sessionForm.date, durationMin: num(sessionForm.durationMin), workoutType: sessionForm.workoutType.trim(), volumeKg, exercises: exercise, notes: sessionForm.notes.trim() };
+    if (!sessionForm.workoutType || !sessionForm.date || num(sessionForm.durationMin) < 1) return;
+    const exercises = sessionForm.exercises.filter((item) => item.name.trim()).map((item) => ({ name: item.name.trim(), sets: Math.max(1, num(item.sets)), reps: Math.max(1, num(item.reps)), weightKg: Math.max(0, num(item.weightKg)) }));
+    const volumeKg = exercises.reduce((sum, item) => sum + item.sets * item.reps * item.weightKg, 0);
+    const row = { id: crypto.randomUUID(), date: sessionForm.date, durationMin: num(sessionForm.durationMin), workoutType: sessionForm.workoutType, volumeKg, exercises, notes: sessionForm.notes.trim() || null };
     await persist({ ...payloadRef.current, sessions: [row, ...(payloadRef.current.sessions || [])] });
-    setSessionForm({ date: localDate(), workoutType: "Силове", durationMin: 60, exercise: "", sets: 3, reps: 10, kg: 0, notes: "" });
+    setSessionForm({ date: localDate(), workoutType: "full_body", durationMin: 60, exercises: [], notes: "" });
   };
+
+  const addExercise = () => setSessionForm((current) => ({ ...current, exercises: [...current.exercises, { name: "", sets: 3, reps: 10, weightKg: 0 }] }));
+  const updateExercise = (index, patch) => setSessionForm((current) => ({ ...current, exercises: current.exercises.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item) }));
+  const removeExercise = (index) => setSessionForm((current) => ({ ...current, exercises: current.exercises.filter((_, itemIndex) => itemIndex !== index) }));
 
   const deleteSession = async (id) => {
     await persist({ ...payloadRef.current, sessions: (payloadRef.current.sessions || []).filter((entry) => entry.id !== id) });
@@ -129,11 +147,18 @@ export default function FitnessPage() {
 
   const addSupplement = async (event) => {
     event.preventDefault();
-    if (!suppForm.name.trim()) return;
+    if (!suppForm.name.trim() || num(suppForm.totalWeightG) <= 0 || num(suppForm.servingSizeG) <= 0 || num(suppForm.servingsPerDay) <= 0) return;
     const current = payloadRef.current;
-    const item = { id: crypto.randomUUID(), name: suppForm.name.trim(), totalWeightG: num(suppForm.totalWeightG), servingSizeG: num(suppForm.servingSizeG), servingsPerDay: num(suppForm.servingsPerDay), price: num(suppForm.price), purchaseDate: todayKey, notes: suppForm.notes.trim() || null };
-    await persist({ ...current, supplements: [item, ...(current.supplements || [])] });
-    setSuppForm({ name: "", totalWeightG: "", servingSizeG: "", servingsPerDay: 1, price: "", notes: "" });
+    const item = { id: suppEditId || crypto.randomUUID(), name: suppForm.name.trim(), totalWeightG: num(suppForm.totalWeightG), servingSizeG: num(suppForm.servingSizeG), servingsPerDay: num(suppForm.servingsPerDay), price: num(suppForm.price), purchaseDate: suppForm.purchaseDate || todayKey, notes: suppForm.notes.trim() || null };
+    const next = suppEditId ? current.supplements.map((entry) => entry.id === suppEditId ? item : entry) : [item, ...(current.supplements || [])];
+    await persist({ ...current, supplements: next });
+    setSuppEditId(null);
+    setSuppForm({ name: "", totalWeightG: "", servingSizeG: "", servingsPerDay: 1, price: "", purchaseDate: localDate(), notes: "" });
+  };
+
+  const editSupplement = (item) => {
+    setSuppEditId(item.id);
+    setSuppForm({ name: item.name || "", totalWeightG: item.totalWeightG || "", servingSizeG: item.servingSizeG || "", servingsPerDay: item.servingsPerDay || 1, price: item.price || "", purchaseDate: item.purchaseDate || todayKey, notes: item.notes || "" });
   };
 
   const deleteSupplement = async (id) => {
@@ -195,9 +220,9 @@ export default function FitnessPage() {
               <div className="fitness-panel-head"><div><span className="suite-eyebrow">01 · ЗАЛ</span><h2>Записати тренування</h2><p>Запис з’явиться і в Android-застосунку.</p></div><span className="fitness-panel-icon">↗</span></div>
               <form className="fitness-form" onSubmit={addSession}>
                 <div className="fitness-form-row"><label>Дата<input type="date" value={sessionForm.date} onChange={(event) => setSessionForm({ ...sessionForm, date: event.target.value })} required /></label><label>Тривалість, хв<input type="number" min="1" max="600" value={sessionForm.durationMin} onChange={(event) => setSessionForm({ ...sessionForm, durationMin: event.target.value })} required /></label></div>
-                <label>Тип тренування<input value={sessionForm.workoutType} onChange={(event) => setSessionForm({ ...sessionForm, workoutType: event.target.value })} maxLength={50} placeholder="Силове, кардіо…" required /></label>
-                <label>Вправа · необов’язково<input value={sessionForm.exercise} onChange={(event) => setSessionForm({ ...sessionForm, exercise: event.target.value })} maxLength={70} placeholder="Наприклад, присідання зі штангою" /></label>
-                {sessionForm.exercise && <div className="fitness-form-row"><label>Підходи<input type="number" min="1" value={sessionForm.sets} onChange={(event) => setSessionForm({ ...sessionForm, sets: event.target.value })} /></label><label>Повторення<input type="number" min="1" value={sessionForm.reps} onChange={(event) => setSessionForm({ ...sessionForm, reps: event.target.value })} /></label><label>Вага, кг<input type="number" min="0" step="0.5" value={sessionForm.kg} onChange={(event) => setSessionForm({ ...sessionForm, kg: event.target.value })} /></label></div>}
+                <label>Тип тренування<select value={sessionForm.workoutType} onChange={(event) => setSessionForm({ ...sessionForm, workoutType: event.target.value })}><option value="push">Push</option><option value="pull">Pull</option><option value="legs">Ноги</option><option value="upper">Верх тіла</option><option value="lower">Низ тіла</option><option value="full_body">Все тіло</option><option value="cardio">Кардіо</option><option value="other">Інше</option></select></label>
+                <div className="fitness-exercise-heading"><span>Вправи та робочі підходи</span><button type="button" className="suite-outline" onClick={addExercise}>＋ Додати вправу</button></div>
+                {sessionForm.exercises.map((exercise, index) => <div className="fitness-exercise-row" key={index}><label>Вправа<input value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} placeholder="Наприклад, жим лежачи" maxLength={70} /></label><label>Підходи<input type="number" min="1" value={exercise.sets} onChange={(event) => updateExercise(index, { sets: event.target.value })} /></label><label>Повторення<input type="number" min="1" value={exercise.reps} onChange={(event) => updateExercise(index, { reps: event.target.value })} /></label><label>Кг<input type="number" min="0" step="0.5" value={exercise.weightKg} onChange={(event) => updateExercise(index, { weightKg: event.target.value })} /></label><button className="fitness-remove-exercise" type="button" onClick={() => removeExercise(index)} aria-label="Прибрати вправу">×</button></div>)}
                 <label>Нотатки<textarea rows="2" value={sessionForm.notes} onChange={(event) => setSessionForm({ ...sessionForm, notes: event.target.value })} maxLength={300} placeholder="Самопочуття, акценти, результати…" /></label>
                 <button className="suite-primary" disabled={busy} type="submit">Зберегти тренування <span>↗</span></button>
               </form>
@@ -229,12 +254,10 @@ export default function FitnessPage() {
                 <label>Назва<input value={suppForm.name} onChange={(event) => setSuppForm({ ...suppForm, name: event.target.value })} placeholder="Протеїн, креатин…" maxLength={70} required /></label>
                 <div className="fitness-form-row"><label>Упаковка, г<input type="number" min="1" value={suppForm.totalWeightG} onChange={(event) => setSuppForm({ ...suppForm, totalWeightG: event.target.value })} /></label><label>Порція, г<input type="number" min="0.1" step="0.1" value={suppForm.servingSizeG} onChange={(event) => setSuppForm({ ...suppForm, servingSizeG: event.target.value })} /></label></div>
                 <div className="fitness-form-row"><label>Порцій на день<input type="number" min="0.1" step="0.1" value={suppForm.servingsPerDay} onChange={(event) => setSuppForm({ ...suppForm, servingsPerDay: event.target.value })} /></label><label>Ціна, ₴<input type="number" min="0" value={suppForm.price} onChange={(event) => setSuppForm({ ...suppForm, price: event.target.value })} /></label></div>
-                <button className="suite-primary" disabled={busy}>Додати добавку <span>↗</span></button>
+                <div className="fitness-form-row"><label>Дата покупки<input type="date" value={suppForm.purchaseDate} onChange={(event) => setSuppForm({ ...suppForm, purchaseDate: event.target.value })} /></label><label>Нотатки<input value={suppForm.notes} onChange={(event) => setSuppForm({ ...suppForm, notes: event.target.value })} placeholder="Необов’язково" /></label></div>
+                <div className="fitness-form-row"><button className="suite-primary" disabled={busy}>{suppEditId ? "Зберегти зміни" : "Додати добавку"} <span>↗</span></button>{suppEditId && <button className="suite-outline" type="button" onClick={() => { setSuppEditId(null); setSuppForm({ name: "", totalWeightG: "", servingSizeG: "", servingsPerDay: 1, price: "", purchaseDate: localDate(), notes: "" }); }}>Скасувати</button>}</div>
               </form>
-              <div className="fitness-record-list">{supplements.map((item) => {
-                const remaining = num(item.totalWeightG) && num(item.servingSizeG) ? Math.floor(num(item.totalWeightG) / (num(item.servingSizeG) * Math.max(.1, num(item.servingsPerDay)))) : null;
-                return <div className="fitness-record" key={item.id}><div><b>{item.name}</b><small>{remaining == null ? "Запас не вказано" : `Приблизно ${remaining} днів запасу`}</small></div><button type="button" onClick={() => void deleteSupplement(item.id)} aria-label={`Видалити ${item.name}`}>×</button></div>;
-              })}{supplements.length === 0 && <div className="fitness-empty-inline">Додайте першу позицію у ваш стек.</div>}</div>
+              <div className="fitness-record-list">{supplementStatuses.map((item) => <div className="fitness-record fitness-supplement-record" key={item.id}><div className="fitness-supplement-progress"><i style={{ width: `${item.remainingPct}%` }} /></div><div className="fitness-supplement-info"><b>{item.name}</b><small>{item.remaining.toFixed(0)} г залишилось · {item.daysLeft} дн. запасу</small><small>Закінчиться {item.depletionDate} · {item.costPerServing.toFixed(2)} ₴ / порція</small></div><div className="fitness-supplement-actions"><button type="button" onClick={() => editSupplement(item)} aria-label={`Редагувати ${item.name}`}>✎</button><button type="button" onClick={() => void deleteSupplement(item.id)} aria-label={`Видалити ${item.name}`}>×</button></div></div>)}{supplements.length === 0 && <div className="fitness-empty-inline">Додайте першу позицію у ваш стек.</div>}</div>
             </article>
           </section>
 
@@ -247,7 +270,7 @@ export default function FitnessPage() {
               <div className="fitness-panel-head"><div><span className="suite-eyebrow">06 · ОСОБИСТИЙ ПРОФІЛЬ</span><h2>Цілі та мотивація</h2><p>Основні параметри фітнес-акаунта.</p></div><span className="fitness-panel-icon goal-icon">✦</span></div>
               <form className="fitness-form" onSubmit={saveProfile}>
                 <label>Місячний абонемент, ₴<input type="number" min="0" value={profileForm.monthlyGymCost} onChange={(event) => setProfileForm({ ...profileForm, monthlyGymCost: event.target.value })} placeholder="0" /></label>
-                <label>Фокус<select value={profileForm.fitnessGoal} onChange={(event) => setProfileForm({ ...profileForm, fitnessGoal: event.target.value })}><option value="general">Загальна форма</option><option value="muscle_gain">Набір м’язів</option><option value="weight_loss">Зниження ваги</option><option value="strength">Сила</option><option value="endurance">Витривалість</option></select></label>
+                <label>Фокус<select value={profileForm.fitnessGoal} onChange={(event) => setProfileForm({ ...profileForm, fitnessGoal: event.target.value })}><option value="general">Загальна форма</option><option value="strength">Сила</option><option value="hypertrophy">Гіпертрофія</option><option value="endurance">Витривалість</option></select></label>
                 <label>Ваш титул<input value={profileForm.fitnessBadge} onChange={(event) => setProfileForm({ ...profileForm, fitnessBadge: event.target.value })} maxLength={40} placeholder="Наприклад, Consistent" /></label>
                 <button className="suite-primary" disabled={busy}>Зберегти цілі <span>↗</span></button>
               </form>
@@ -255,6 +278,7 @@ export default function FitnessPage() {
             </article>
           </section>
 
+          <section className="fitness-roi-banner suite-card"><div><b>{monthSessions}</b><span>тренувань цього місяця</span></div><i /><div><b>{monthlyGymCost.toLocaleString("uk-UA")} ₴</b><span>вартість абонемента</span></div><i /><div><b>{gymCostPerSession.toFixed(2)} ₴</b><span>вартість одного тренування</span></div></section>
           <section className="fitness-history suite-card">
             <div className="fitness-panel-head"><div><span className="suite-eyebrow">ЖУРНАЛ АКТИВНОСТІ</span><h2>Останні тренування</h2><p>{sessions.length} сесій синхронізовано між сайтом і застосунком.</p></div><a className="suite-outline" href="#workouts">＋ Нове тренування</a></div>
             {sessions.length ? <div className="fitness-session-table"><div className="fitness-session-head"><span>ТРЕНУВАННЯ</span><span>ДАТА</span><span>ЧАС</span><span>ОБ’ЄМ</span><span /></div>{sessions.slice(0, 12).map((session) => <article className="fitness-session-row" key={session.id}><div><b>{session.workoutType || "Тренування"}</b><small>{(session.exercises || []).map((exercise) => exercise.name).filter(Boolean).join(" · ") || session.notes || "Особиста сесія"}</small></div><span>{sessionDate(session.date)}</span><span>{num(session.durationMin)} хв</span><span>{num(session.volumeKg).toLocaleString("uk-UA")} кг</span><button type="button" onClick={() => void deleteSession(session.id)} aria-label={`Видалити ${session.workoutType}`}>×</button></article>)}</div> : <div className="fitness-empty-history"><span>✳</span><h3>Ваш прогрес починається тут</h3><p>Збережіть тренування — і воно з’явиться у спільній історії.</p></div>}
